@@ -7,7 +7,8 @@ deploy(
   config.LIQUIDITY_TOKEN_ADDRESS,
   config.XXXTOKEN_ADDRESS,
   config.REWARD_PERCENTAGE,
-  config.REWARD_INTERVAL
+  config.REWARD_INTERVAL,
+  config.LOCK_INTERVAL
 ).catch((error) => {
   console.error(error);
   process.exitCode = 1;
