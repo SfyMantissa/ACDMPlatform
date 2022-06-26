@@ -9,7 +9,7 @@ task("vote",
   .addParam("decision", "Whether you vote `for` (true) or `against` (false).")
   .setAction(async (args, { ethers }) => {
     const signerArray = await ethers.getSigners();
-    const daoVoting = await ethers.getContractAt("DAOVoting", config.DAO_ADDRESS);
+    const daoVoting = await ethers.getContractAt("DAOVoting", config.DAOVOTING_ADDRESS);
 
     let isFor = (args.decision === 'true');
     const txVote = daoVoting.connect(

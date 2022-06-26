@@ -25,6 +25,7 @@ task("addLiquidity",
 
     const symbol = await xxxToken.symbol();
 
+    await xxxToken.connect(signerArray[args.signer]).mint(signerArray[args.signer].address, args.amount);
     await xxxToken.connect(signerArray[args.signer]).approve(config.ROUTER02_ADDRESS, args.amount);
 
     const router02 = new ethers.Contract(

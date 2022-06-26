@@ -3,3 +3,4 @@ import "./ACDMToken";
 import "./DAO";
 import "./XXXToken";
 import "./Staking";
+import "./ACDMPlatform";

@@ -8,7 +8,7 @@ task("finishProposal",
   .addParam("proposalId", "Proposal ID.")
   .setAction(async (args, { ethers }) => {
     const signerArray = await ethers.getSigners();
-    const daoVoting = await ethers.getContractAt("DAOVoting", config.DAO_ADDRESS);
+    const daoVoting = await ethers.getContractAt("DAOVoting", config.DAOVOTING_ADDRESS);
 
     const txFinishProposal = daoVoting.connect(
       signerArray[args.signer]).finishProposal(
