@@ -23,7 +23,6 @@ export const addLiquidity = async (
     signer
   );
 
-  await xxxToken.connect(signer).mint(signer.address, provideAmount);
   await xxxToken
     .connect(signer)
     .approve(config.ROUTER02_ADDRESS, provideAmount);
