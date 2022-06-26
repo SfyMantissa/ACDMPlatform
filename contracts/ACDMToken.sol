@@ -5,30 +5,40 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
+/// @title ERC20 token for the ACDM Platform project.
+/// @author Sfy Mantissa
 contract ACDMToken is ERC20, AccessControl {
 
+  /// @dev Role which will be able to call `mint` and `burn`.
   bytes32 public constant MANIPULATOR_ROLE = keccak256("MANIPULATOR_ROLE");
 
-  constructor(address _externalManipulator) ERC20("ACADEM Coin", "ACDM") {
-    _mint(msg.sender, 10000);
+  /// @dev Deployer is set as the default admin.
+  constructor() ERC20("ACADEM Coin", "ACDM") {
+    _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     _setupRole(MANIPULATOR_ROLE, msg.sender);
-    _setupRole(MANIPULATOR_ROLE, _externalManipulator);
   }
 
+  /// @dev Get token decimals.
   function decimals() public pure override returns (uint8) {
     return 6;
   }
 
+  /// @dev Mint tokens to `account` in quantity `amount`.
+  /// @param account Address of the receiving account.
+  /// @param amount Quantity of tokens to mint.
   function mint(address account, uint256 amount)
     external
-    // onlyRole(MANIPULATOR_ROLE)
+    onlyRole(MANIPULATOR_ROLE)
   {
     _mint(account, amount);
   }
 
+  /// @dev Burn tokens from `account` in quantity `amount`.
+  /// @param account Address of the burned account.
+  /// @param amount Quantity of tokens to burn.
   function burn(address account, uint256 amount)
     external
-    // onlyRole(MANIPULATOR_ROLE)
+    onlyRole(MANIPULATOR_ROLE)
   {
     _burn(account, amount);
   }

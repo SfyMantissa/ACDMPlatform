@@ -1,8 +1,8 @@
 # ACDMPlatform
 
+*Sfy Mantissa*
 
-
-
+> A DAO proposal voting implementation with ERC-20 tokens.
 
 
 
@@ -18,7 +18,7 @@ function DAO() external view returns (bytes32)
 
 
 
-
+*Used to identify DAO contract.*
 
 
 #### Returns
@@ -52,7 +52,7 @@ function INITIAL_PRICE() external view returns (uint256)
 
 
 
-
+*Used to set the initial sale price.*
 
 
 #### Returns
@@ -69,7 +69,7 @@ function INITIAL_VOLUME() external view returns (uint256)
 
 
 
-
+*Used to set the initial sale volume.*
 
 
 #### Returns
@@ -86,7 +86,7 @@ function REGISTERED() external view returns (bytes32)
 
 
 
-
+*Used to identify registered users.*
 
 
 #### Returns
@@ -95,56 +95,22 @@ function REGISTERED() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
-### _sellAmount
+### acdmToken
 
 ```solidity
-function _sellAmount() external view returns (uint256)
+function acdmToken() external view returns (contract ACDMToken)
 ```
 
 
 
-
+*ACDM Token instance.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined |
-
-### _totalCommissionEth
-
-```solidity
-function _totalCommissionEth() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### acdmTokenAddress
-
-```solidity
-function acdmTokenAddress() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
+| _0 | contract ACDMToken | undefined |
 
 ### addOrder
 
@@ -154,14 +120,14 @@ function addOrder(uint256 price, uint256 amount) external nonpayable
 
 
 
-
+*Place an order to trade.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| price | uint256 | undefined |
-| amount | uint256 | undefined |
+| price | uint256 | Price of the provided assets. |
+| amount | uint256 | Quantity of the provided assets. |
 
 ### burnTokens
 
@@ -171,7 +137,7 @@ function burnTokens() external nonpayable
 
 
 
-
+*Buy XXX Coins for all commission and burn      them (can ONLY be decided by a vote).*
 
 
 ### buyACDM
@@ -182,7 +148,7 @@ function buyACDM() external payable
 
 
 
-
+*Buy ACDM tokens.*
 
 
 ### getRoleAdmin
@@ -255,7 +221,7 @@ function orders(uint256) external view returns (address seller, uint256 price, u
 
 
 
-
+*List of all placed orders.*
 
 #### Parameters
 
@@ -279,7 +245,7 @@ function owner() external view returns (address)
 
 
 
-
+*Address of the contract&#39;s deployer.*
 
 
 #### Returns
@@ -296,14 +262,14 @@ function redeemOrder(uint256 orderId, uint256 amount) external payable
 
 
 
-
+*Redeem an order fully or partially.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| orderId | uint256 | undefined |
-| amount | uint256 | undefined |
+| orderId | uint256 | ID of the order to redeem. |
+| amount | uint256 | Quantity of assets to redeem. |
 
 ### refererOneCommission
 
@@ -313,7 +279,7 @@ function refererOneCommission() external view returns (uint256)
 
 
 
-
+*Commission for the first referer in the sale round.*
 
 
 #### Returns
@@ -330,7 +296,7 @@ function refererTradeCommission() external view returns (uint256)
 
 
 
-
+*Commission for each referer per trade.*
 
 
 #### Returns
@@ -347,7 +313,7 @@ function refererTwoCommission() external view returns (uint256)
 
 
 
-
+*Commission for the second referer in the sale round.*
 
 
 #### Returns
@@ -364,13 +330,13 @@ function register(address referer) external nonpayable
 
 
 
-
+*Allows the user to register.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| referer | address | undefined |
+| referer | address | User&#39;s referer.        Set to address(0) if there&#39;s no referer. |
 
 ### removeOrder
 
@@ -380,13 +346,13 @@ function removeOrder(uint256 orderId) external nonpayable
 
 
 
-
+*Remove an order from trade.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| orderId | uint256 | undefined |
+| orderId | uint256 | ID of the order to remove. |
 
 ### renounceRole
 
@@ -422,15 +388,15 @@ function revokeRole(bytes32 role, address account) external nonpayable
 | role | bytes32 | undefined |
 | account | address | undefined |
 
-### sellPrice
+### salePrice
 
 ```solidity
-function sellPrice() external view returns (uint256)
+function salePrice() external view returns (uint256)
 ```
 
 
 
-
+*Sale price.*
 
 
 #### Returns
@@ -447,7 +413,7 @@ function setRefererOneCommission(uint256 _value) external nonpayable
 
 
 
-
+*Change 1st referer sale commission (can ONLY be decided by a vote).*
 
 #### Parameters
 
@@ -463,7 +429,7 @@ function setRefererTradeCommission(uint256 _value) external nonpayable
 
 
 
-
+*Change referer trade commission (can ONLY be decided by a vote).*
 
 #### Parameters
 
@@ -479,7 +445,7 @@ function setRefererTwoCommission(uint256 _value) external nonpayable
 
 
 
-
+*Change 2nd referer sale commission (can ONLY be decided by a vote).*
 
 #### Parameters
 
@@ -495,7 +461,7 @@ function startSaleRound() external nonpayable
 
 
 
-
+*Start the sale round.*
 
 
 ### startTradeRound
@@ -506,7 +472,7 @@ function startTradeRound() external nonpayable
 
 
 
-
+*Start the trade round.*
 
 
 ### supportsInterface
@@ -539,7 +505,7 @@ function tradeVolume() external view returns (uint256)
 
 
 
-
+*Trade volume.*
 
 
 #### Returns
@@ -548,32 +514,32 @@ function tradeVolume() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### uniswapV2Router
+### uniV2Router
 
 ```solidity
-function uniswapV2Router() external view returns (address)
+function uniV2Router() external view returns (contract IUniswapV2Router02)
 ```
 
 
 
-
+*Uniswap V2 Router instance.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined |
+| _0 | contract IUniswapV2Router02 | undefined |
 
-### weth
+### wethAddress
 
 ```solidity
-function weth() external view returns (address)
+function wethAddress() external view returns (address)
 ```
 
 
 
-
+*Address of WETH token on the network.*
 
 
 #### Returns
@@ -590,8 +556,25 @@ function withdrawCommission() external nonpayable
 
 
 
+*Withdraw the commission to owner (can ONLY be decided by a vote).*
 
 
+### xxxToken
+
+```solidity
+function xxxToken() external view returns (contract XXXToken)
+```
+
+
+
+*XXX Coin instance.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract XXXToken | undefined |
 
 ### xxxTokenAddress
 
@@ -601,7 +584,7 @@ function xxxTokenAddress() external view returns (address)
 
 
 
-
+*Address of the XXX Coin on the network.*
 
 
 #### Returns
@@ -622,7 +605,7 @@ event ACDMBought(address userAddress, uint256 amount)
 
 
 
-
+*Emits when a user buys ACDM tokens.*
 
 #### Parameters
 
@@ -634,55 +617,55 @@ event ACDMBought(address userAddress, uint256 amount)
 ### OrderAdded
 
 ```solidity
-event OrderAdded(uint256 indexed orderId, address indexed seller, uint256 indexed price, uint256 availableAmount)
+event OrderAdded(uint256 orderId, address seller, uint256 price, uint256 availableAmount)
 ```
 
 
 
-
+*Emits when a user adds an order.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| orderId `indexed` | uint256 | undefined |
-| seller `indexed` | address | undefined |
-| price `indexed` | uint256 | undefined |
+| orderId  | uint256 | undefined |
+| seller  | address | undefined |
+| price  | uint256 | undefined |
 | availableAmount  | uint256 | undefined |
 
 ### OrderRedeemed
 
 ```solidity
-event OrderRedeemed(uint256 indexed orderId, address indexed buyer, uint256 deductedAmount)
+event OrderRedeemed(uint256 orderId, address buyer, uint256 deductedAmount)
 ```
 
 
 
-
+*Emits when a user buys an order (partially or not).*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| orderId `indexed` | uint256 | undefined |
-| buyer `indexed` | address | undefined |
+| orderId  | uint256 | undefined |
+| buyer  | address | undefined |
 | deductedAmount  | uint256 | undefined |
 
 ### OrderRemoved
 
 ```solidity
-event OrderRemoved(uint256 indexed orderId, uint256 leftAmount)
+event OrderRemoved(uint256 orderId, uint256 leftAmount)
 ```
 
 
 
-
+*Emits when a user removes an order.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| orderId `indexed` | uint256 | undefined |
+| orderId  | uint256 | undefined |
 | leftAmount  | uint256 | undefined |
 
 ### RoleAdminChanged
@@ -747,7 +730,7 @@ event RoundStarted(uint256 finishTime, enum ACDMPlatform.RoundType round)
 
 
 
-
+*Emits when a sale or trade round starts.*
 
 #### Parameters
 
@@ -764,7 +747,7 @@ event UserRegistered(address userAddress, address refererAddress)
 
 
 
-
+*Emits when a user registers.      In case there&#39;s no referer, `refererAddress` should be set       to address(0).*
 
 #### Parameters
 

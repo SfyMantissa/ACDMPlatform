@@ -1,8 +1,8 @@
 # DAOVoting
 
+*Sfy Mantissa*
 
-
-
+> A DAO proposal voting implementation with ERC-20 tokens.
 
 
 
@@ -10,15 +10,15 @@
 
 ## Methods
 
-### CHAIRMAN_ROLE
+### CHAIRMAN
 
 ```solidity
-function CHAIRMAN_ROLE() external view returns (bytes32)
+function CHAIRMAN() external view returns (bytes32)
 ```
 
 
 
-
+*Chairman role (primarily for proposal creation).*
 
 
 #### Returns
@@ -27,15 +27,15 @@ function CHAIRMAN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
-### DAO_ROLE
+### DAO
 
 ```solidity
-function DAO_ROLE() external view returns (bytes32)
+function DAO() external view returns (bytes32)
 ```
 
 
 
-
+*DAO role (executes changes which get voted for).*
 
 
 #### Returns
@@ -69,15 +69,15 @@ function addProposal(bytes _callData, address _recipient, string _description) e
 
 
 
-
+*Used to add new proposals.      Can only be called by the chairman.      Emits `ProposalAdded`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _callData | bytes | undefined |
-| _recipient | address | undefined |
-| _description | string | undefined |
+| _callData | bytes | Function signature used if the vote succeeded. |
+| _recipient | address | Address of the contract to use the `_callData` upon. |
+| _description | string | General description of proposed change. |
 
 ### debatingPeriodDuration
 
@@ -87,7 +87,7 @@ function debatingPeriodDuration() external view returns (uint256)
 
 
 
-
+*Time period in which new votes are accepted (in seconds).*
 
 
 #### Returns
@@ -104,13 +104,13 @@ function finishProposal(uint256 _proposalId) external nonpayable
 
 
 
-
+*Used to finish the proposal voting.      Unlike `addProposal` may be called by anyone.      Emits `ProposalFinished`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _proposalId | uint256 | undefined |
+| _proposalId | uint256 | The ID of the proposal. |
 
 ### getRoleAdmin
 
@@ -182,7 +182,7 @@ function minimumQuorum() external view returns (uint256)
 
 
 
-
+*Minimum amount of votes required to consider the vote successful.*
 
 
 #### Returns
@@ -199,7 +199,7 @@ function proposals(uint256) external view returns (uint256 startTimeStamp, uint2
 
 
 
-
+*List of proposals is stored on-chain.*
 
 #### Parameters
 
@@ -261,13 +261,13 @@ function setDebatingPeriodDuration(uint256 _value) external nonpayable
 
 
 
-
+*Used to change the debatingPeriodDuration value.      Can only be called by the chairman or DAO.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _value | uint256 | undefined |
+| _value | uint256 | The new debatingPeriodDuration value. |
 
 ### setMinimumQuorum
 
@@ -277,13 +277,13 @@ function setMinimumQuorum(uint256 _value) external nonpayable
 
 
 
-
+*Used to change the minimumQuorum value.      Can only be called by the chairman or DAO.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _value | uint256 | undefined |
+| _value | uint256 | The new minimumQuorum value. |
 
 ### staking
 
@@ -293,7 +293,7 @@ function staking() external view returns (contract Staking)
 
 
 
-
+*Staking contract used to deposit tokens.*
 
 
 #### Returns
@@ -332,7 +332,7 @@ function token() external view returns (contract IERC20)
 
 
 
-
+*The instance of token, which is used to make votes.      1 vote == 1 token.*
 
 
 #### Returns
@@ -349,7 +349,7 @@ function userToLastProposalId(address) external view returns (uint256)
 
 
 
-
+*Mapping of users to the proposals in which they&#39;ve recently voted.      Needed for the withdrawal logic to function correctly.*
 
 #### Parameters
 
@@ -371,14 +371,14 @@ function vote(uint256 _proposalId, bool _decision) external nonpayable
 
 
 
-
+*Used to cast votes by users.      Emits `VoteCasted`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _proposalId | uint256 | undefined |
-| _decision | bool | undefined |
+| _proposalId | uint256 | The ID of the proposal. |
+| _decision | bool | `true` if user votes `for`, `false` otherwise. |
 
 
 
@@ -392,7 +392,7 @@ event ProposalAdded(uint256 proposalId, string description, uint256 startTimeSta
 
 
 
-
+*Must trigger when new proposals are added by the chairman.*
 
 #### Parameters
 
@@ -411,7 +411,7 @@ event ProposalFinished(uint256 proposalId, string description, bool decision, ui
 
 
 
-
+*Must trigger when a proposal is finished.*
 
 #### Parameters
 
@@ -485,7 +485,7 @@ event VoteCasted(uint256 proposalId, address voter, bool decision, uint256 votes
 
 
 
-
+*Must trigger when new votes are casted by the user.*
 
 #### Parameters
 

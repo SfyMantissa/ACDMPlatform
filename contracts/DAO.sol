@@ -7,15 +7,24 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
+/// @title A DAO proposal voting implementation with ERC-20 tokens.
+/// @author Sfy Mantissa
 contract DAOVoting is AccessControl {
 
     using Counters for Counters.Counter;
     Counters.Counter private proposalId;
 
-    bytes32 public constant CHAIRMAN_ROLE = keccak256("CHAIRMAN_ROLE");
-    bytes32 public constant DAO_ROLE = keccak256("DAO_ROLE");
+    /// @dev Chairman role (primarily for proposal creation).
+    bytes32 public constant CHAIRMAN = keccak256("CHAIRMAN");
 
+    /// @dev DAO role (executes changes which get voted for).
+    bytes32 public constant DAO = keccak256("DAO");
+
+    /// @dev Mapping of users to the proposals in which they've recently voted.
+    ///      Needed for the withdrawal logic to function correctly.
     mapping(address => uint256) public userToLastProposalId;
+
+    /// @dev List of proposals is stored on-chain.
     mapping(uint256 => Proposal) public proposals;
 
     struct Proposal {                           
@@ -29,11 +38,20 @@ contract DAOVoting is AccessControl {
         bytes callData;                         
     }
 
+    /// @dev The instance of token, which is used to make votes.
+    ///      1 vote == 1 token.
     IERC20 public token;
+
+    /// @dev Staking contract used to deposit tokens.
     Staking public staking;
+
+    /// @dev Minimum amount of votes required to consider the vote successful.
     uint256 public minimumQuorum;
+
+    /// @dev Time period in which new votes are accepted (in seconds).
     uint256 public debatingPeriodDuration;
 
+    /// @dev Must trigger when new proposals are added by the chairman.
     event ProposalAdded(
       uint256 proposalId,
       string description,
@@ -41,6 +59,7 @@ contract DAOVoting is AccessControl {
       address recipient
     );
 
+    /// @dev Must trigger when new votes are casted by the user.
     event VoteCasted(
       uint256 proposalId,
       address voter,
@@ -48,6 +67,7 @@ contract DAOVoting is AccessControl {
       uint256 votes
     );
 
+    /// @dev Must trigger when a proposal is finished.
     event ProposalFinished(
       uint256 proposalId,
       string description,
@@ -56,23 +76,32 @@ contract DAOVoting is AccessControl {
       uint256 voteCount
     );
 
+    /// @dev Some initial values are set in the constructor.
+    /// @param _voteToken Address of the token used to cast votes.
+    /// @param _minimumQuorum Minimal amount of votes.
+    /// @param _debatingPeriodDuration Voting period in seconds.
     constructor
     (
-        address _chairman,
         address _voteToken,
         address _stakingAddress,
         uint256 _minimumQuorum,
         uint256 _debatingPeriodDuration
     )
     {
-        _setupRole(CHAIRMAN_ROLE, _chairman);
-        _setupRole(DAO_ROLE, address(this));
+        _setupRole(CHAIRMAN, msg.sender);
+        _setupRole(DAO, address(this));
         token = IERC20(_voteToken);
         staking = Staking(_stakingAddress);
         minimumQuorum = _minimumQuorum;
         debatingPeriodDuration = _debatingPeriodDuration;
     }
 
+    /// @dev Used to add new proposals.
+    ///      Can only be called by the chairman.
+    ///      Emits `ProposalAdded`.
+    /// @param _callData Function signature used if the vote succeeded.
+    /// @param _recipient Address of the contract to use the `_callData` upon.
+    /// @param _description General description of proposed change.
     function addProposal
     (
       bytes memory _callData,
@@ -82,7 +111,7 @@ contract DAOVoting is AccessControl {
       external
     {
       require(
-        hasRole(CHAIRMAN_ROLE, msg.sender), 
+        hasRole(CHAIRMAN, msg.sender), 
         "ERROR: Caller is not the chairman."
       );
 
@@ -103,6 +132,10 @@ contract DAOVoting is AccessControl {
       );
     }
 
+    /// @dev Used to cast votes by users.
+    ///      Emits `VoteCasted`.
+    /// @param _proposalId The ID of the proposal.
+    /// @param _decision `true` if user votes `for`, `false` otherwise.
     function vote
     (
       uint256 _proposalId,
@@ -145,6 +178,10 @@ contract DAOVoting is AccessControl {
       emit VoteCasted(_proposalId, msg.sender, _decision, votes);
     }
 
+    /// @dev Used to finish the proposal voting.
+    ///      Unlike `addProposal` may be called by anyone.
+    ///      Emits `ProposalFinished`.
+    /// @param _proposalId The ID of the proposal.
     function finishProposal(uint256 _proposalId)
       external
     {
@@ -188,22 +225,28 @@ contract DAOVoting is AccessControl {
       );
     }
 
+    /// @dev Used to change the minimumQuorum value.
+    ///      Can only be called by the chairman or DAO.
+    /// @param _value The new minimumQuorum value.
     function setMinimumQuorum(uint256 _value)
       external
     {
       require(
-        hasRole(CHAIRMAN_ROLE, msg.sender) || hasRole(DAO_ROLE, msg.sender), 
+        hasRole(CHAIRMAN, msg.sender) || hasRole(DAO, msg.sender), 
         "ERROR: Caller is not the chairman or DAO."
       );
 
         minimumQuorum = _value;
     }
 
+    /// @dev Used to change the debatingPeriodDuration value.
+    ///      Can only be called by the chairman or DAO.
+    /// @param _value The new debatingPeriodDuration value.
     function setDebatingPeriodDuration(uint256 _value)
       external
     {
       require(
-        hasRole(CHAIRMAN_ROLE, msg.sender) || hasRole(DAO_ROLE, msg.sender), 
+        hasRole(CHAIRMAN, msg.sender) || hasRole(DAO, msg.sender), 
         "ERROR: Caller is not the chairman or DAO."
       );
 

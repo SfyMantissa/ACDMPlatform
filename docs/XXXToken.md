@@ -1,8 +1,8 @@
 # XXXToken
 
+*Sfy Mantissa*
 
-
-
+> ERC20 token for the ACDM Platform project.
 
 
 
@@ -35,7 +35,7 @@ function MANIPULATOR_ROLE() external view returns (bytes32)
 
 
 
-
+*Role which will be able to call `mint` and `burn`.*
 
 
 #### Returns
@@ -120,14 +120,14 @@ function burn(address account, uint256 amount) external nonpayable
 
 
 
-
+*Burn tokens from `account` in quantity `amount`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined |
-| amount | uint256 | undefined |
+| account | address | Address of the burned account. |
+| amount | uint256 | Quantity of tokens to burn. |
 
 ### decimals
 
@@ -262,14 +262,14 @@ function mint(address account, uint256 amount) external nonpayable
 
 
 
-
+*Mint tokens to `account` in quantity `amount`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined |
-| amount | uint256 | undefined |
+| account | address | Address of the receiving account. |
+| amount | uint256 | Quantity of tokens to mint. |
 
 ### name
 
