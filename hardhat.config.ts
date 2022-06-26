@@ -13,7 +13,15 @@ import "solidity-coverage";
 dotenv.config();
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.8",
+  solidity: {
+    version: "0.8.8",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 1,
+      },
+    },
+  },
   networks: {
     hardhat: {
       forking: {
