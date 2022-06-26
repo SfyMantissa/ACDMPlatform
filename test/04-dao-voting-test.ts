@@ -7,10 +7,13 @@ import { testDeploy } from "../utils/deploy-utils";
 import { addLiquidity } from "../utils/staking-utils";
 
 import config from "../config";
+import hre from "hardhat";
 
 describe("DAOVoting", () => {
   let daoVoting: Contract;
   let staking: Contract;
+  let xxxToken: Contract;
+  let xxxAdminAddress: string;
   let owner: SignerWithAddress;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
@@ -19,23 +22,37 @@ describe("DAOVoting", () => {
 
   before(async () => {
     [owner, user1, user2] = await ethers.getSigners();
+    xxxAdminAddress = "0x9271EfD9709270334721f58f722DDc5C8Ee0E3DF";
 
     staking = await testDeploy(
       "Staking",
       config.LIQUIDITY_TOKEN_ADDRESS,
       config.XXXTOKEN_ADDRESS,
       config.REWARD_PERCENTAGE,
-      config.REWARD_INTERVAL
+      config.REWARD_INTERVAL,
+      config.LOCK_INTERVAL
     );
 
     daoVoting = await testDeploy(
       "DAOVoting",
-      owner.address,
       config.LIQUIDITY_TOKEN_ADDRESS,
       staking.address,
-      100,
-      259200
+      config.MINIMUM_QUORUM,
+      config.DEBATING_PERIOD
     );
+
+    xxxToken = await ethers.getContractAt("XXXToken", config.XXXTOKEN_ADDRESS);
+
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [xxxAdminAddress],
+    });
+
+    const xxxAdmin = await ethers.getSigner(xxxAdminAddress);
+
+    await xxxToken.connect(xxxAdmin).mint(owner.address, 100000);
+    await xxxToken.connect(xxxAdmin).mint(user1.address, 100000);
+    await xxxToken.connect(xxxAdmin).mint(user2.address, 100000);
   });
 
   describe("Before the debating period has passed", () => {
@@ -300,6 +317,13 @@ describe("DAOVoting", () => {
           "ERROR: External function call by signature failed."
         );
       });
+    });
+  });
+
+  after(async () => {
+    await hre.network.provider.request({
+      method: "hardhat_stopImpersonatingAccount",
+      params: [xxxAdminAddress],
     });
   });
 });

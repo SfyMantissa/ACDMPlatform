@@ -1,8 +1,9 @@
 import { expect } from "chai";
 import { testDeploy } from "../utils/deploy-utils";
 import config from "../config";
-import { Contract, BigNumber } from "ethers";
+import { Contract } from "ethers";
 import { ethers, waffle } from "hardhat";
+import hre from "hardhat";
 import { addLiquidity } from "../utils/staking-utils";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
@@ -12,55 +13,58 @@ describe("ACDMPlatform", () => {
   let user2: SignerWithAddress;
   let user3: SignerWithAddress;
   let user4: SignerWithAddress;
-  let chairman: SignerWithAddress;
-  let DAO: Contract;
   let staking: Contract;
   let xxxToken: Contract;
+  let adminAddress: string;
   let acdmToken: Contract;
   let daoVoting: Contract;
   let acdmPlatform: Contract;
   let zeroAddress: string = "0x0000000000000000000000000000000000000000";
-  const totalAmount = BigNumber.from("1000000000000000000000000");
   const provider = waffle.provider;
 
   before(async () => {
     [owner, user1, user2, user3, user4] = await ethers.getSigners();
+    adminAddress = "0x9271EfD9709270334721f58f722DDc5C8Ee0E3DF";
 
-    // Deploy tokens
-    xxxToken = await testDeploy(
-      "XXXToken",
-      "0x83695063361619BF2765D885C51Cc6B72D650515"
-    );
-    acdmToken = await testDeploy(
-      "ACDMToken",
-      "0x83695063361619BF2765D885C51Cc6B72D650515"
-    );
+    xxxToken = await ethers.getContractAt("XXXToken", config.XXXTOKEN_ADDRESS);
+    acdmToken = await ethers.getContractAt("ACDMToken", config.ACDMTOKEN_ADDRESS);
 
     staking = await testDeploy(
       "Staking",
       config.LIQUIDITY_TOKEN_ADDRESS,
       config.XXXTOKEN_ADDRESS,
       config.REWARD_PERCENTAGE,
-      config.REWARD_INTERVAL
+      config.REWARD_INTERVAL,
+      config.LOCK_INTERVAL
     );
 
     daoVoting = await testDeploy(
       "DAOVoting",
-      owner.address,
       config.LIQUIDITY_TOKEN_ADDRESS,
       staking.address,
-      100,
-      259200
+      config.MINIMUM_QUORUM,
+      config.DEBATING_PERIOD
     );
 
     acdmPlatform = await testDeploy(
       "ACDMPlatform",
       config.ROUTER02_ADDRESS,
       config.WETH_ADDRESS,
-      acdmToken.address,
-      xxxToken.address,
+      config.ACDMTOKEN_ADDRESS,
+      config.XXXTOKEN_ADDRESS,
       daoVoting.address
     );
+
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [adminAddress],
+    });
+    const admin = await ethers.getSigner(adminAddress);
+
+    await xxxToken.connect(admin).grantRole(await xxxToken.MANIPULATOR_ROLE(), acdmPlatform.address);
+    await acdmToken.connect(admin).grantRole(await acdmToken.MANIPULATOR_ROLE(), acdmPlatform.address);
+    await xxxToken.connect(admin).mint(owner.address, 100000);
+    await xxxToken.connect(admin).mint(user1.address, 100000);
   });
 
   describe("Registration", () => {
@@ -237,7 +241,7 @@ describe("ACDMPlatform", () => {
     it("startSaleRound: should be able to start the sale round", async () => {
       await ethers.provider.send("evm_increaseTime", [3 * 24 * 60 * 60]);
       const tradeVolume = await acdmPlatform.tradeVolume();
-      const price = await acdmPlatform.sellPrice();
+      const price = await acdmPlatform.salePrice();
       const newPrice = price.mul(3).div(100).add(4000000);
       expect(await acdmPlatform.connect(owner).startSaleRound()).to.emit(acdmPlatform, "RoundStarted");
       expect(await acdmToken.balanceOf(acdmPlatform.address)).to.be.equal(
@@ -275,6 +279,7 @@ describe("ACDMPlatform", () => {
           "type": "function"
         }
       ];
+
       const iface = new ethers.utils.Interface(jsonAbi);
       const callData = iface.encodeFunctionData("setRefererTradeCommission", [35]);
       const description = "Change the referer trade commission: 2.5% → 3.5%.";
@@ -399,5 +404,44 @@ describe("ACDMPlatform", () => {
       await daoVoting.finishProposal(4);
     });
 
+    it("burnTokens: a vote to use the accumulated commison to buy XXXTokens on Uniswap and burn them", async () => {
+      const jsonAbi = [
+        {
+          "inputs": [],
+          "name": "burnTokens",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ];
+      const iface = new ethers.utils.Interface(jsonAbi);
+      const callData = iface.encodeFunctionData("burnTokens", []);
+      const description = "Buy XXXTokens for accumulated commission and burn them.";
+
+      await daoVoting.connect(owner).addProposal(callData, acdmPlatform.address, description);
+
+      await addLiquidity(staking, owner, 5000, 1000);
+      await staking.connect(owner).stake(1000);
+      await daoVoting.connect(owner).vote(5, true);
+
+      await addLiquidity(staking, user1, 5000, 500);
+      await staking.connect(user1).stake(500);
+      await daoVoting.connect(user1).vote(5, false);
+
+      await ethers.provider.send("evm_increaseTime", [3 * 24 * 60 * 60]);
+
+      await daoVoting.finishProposal(5);
+    });
+  });
+
+  after(async () => {
+    const admin = await ethers.getSigner(adminAddress);
+    await xxxToken.connect(admin).revokeRole(await xxxToken.MANIPULATOR_ROLE(), acdmPlatform.address);
+    await acdmToken.connect(admin).revokeRole(await acdmToken.MANIPULATOR_ROLE(), acdmPlatform.address);
+
+    await hre.network.provider.request({
+      method: "hardhat_stopImpersonatingAccount",
+      params: [adminAddress],
+    });
   });
 });
