@@ -4,8 +4,10 @@ import IUniswapV2Router02 from "../abi/router02_abi.json";
 import IUniswapV2Pair from '../abi/pair_abi.json';
 
 import { Contract } from "ethers";
+import { MerkleTree } from "merkletreejs";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
+import keccak256 from "keccak256";
 import { ethers } from "hardhat";
 import config from "../config";
 
@@ -64,3 +66,29 @@ export const addLiquidity = async (
 
   await liquidityToken.connect(signer).approve(staking.address, ltAmount);
 };
+
+export const buildTree = (addresses: string[]) => {
+  const leafNodes = addresses.map((addr) => keccak256(addr));
+  const merkleTree = new MerkleTree(leafNodes, keccak256, { sortPairs: true });
+  return merkleTree;
+};
+
+export const getProof = (merkleTree: MerkleTree, address: string) => {
+  return merkleTree.getHexProof(keccak256(address));
+}
+
+export const getRoot = (merkleTree: MerkleTree) => {
+  return "0x".concat(merkleTree.getRoot().toString("hex"));
+}
+
+const main = () => {
+  const merkleTree = buildTree(config.MERKLE_ADDRESSES);
+  console.log("Merkle tree:\n" + merkleTree.toString());
+
+  const root = merkleTree.getRoot().toString("hex");
+  console.log("Merkle tree root: " + "0x".concat(root));
+}
+
+if (require.main === module) {
+  main();
+}

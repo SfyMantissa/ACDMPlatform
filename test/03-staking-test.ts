@@ -1,10 +1,11 @@
 import { Contract } from "ethers";
+import { MerkleTree } from "merkletreejs";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { testDeploy } from "../utils/deploy-utils";
-import { addLiquidity } from "../utils/staking-utils";
+import { addLiquidity, buildTree, getProof, getRoot } from "../utils/staking-utils";
 
 import config from "../config";
 import hre from "hardhat";
@@ -16,14 +17,24 @@ describe("Staking", () => {
   let xxxAdminAddress: string;
   let owner: SignerWithAddress;
   let user: SignerWithAddress;
+  let user3: SignerWithAddress;
   let stakeAmount: number;
+  let merkleTree: MerkleTree;
 
   before(async () => {
-    [owner, user] = await ethers.getSigners();
+    [owner, user, , user3] = await ethers.getSigners();
     xxxAdminAddress = "0x9271EfD9709270334721f58f722DDc5C8Ee0E3DF";
+
+    let addresses = [
+      owner.address,
+      user.address
+    ];
+
+    merkleTree = buildTree(addresses);
 
     staking = await testDeploy(
       "Staking",
+      getRoot(merkleTree),
       config.LIQUIDITY_TOKEN_ADDRESS,
       config.XXXTOKEN_ADDRESS,
       config.REWARD_PERCENTAGE,
@@ -53,6 +64,7 @@ describe("Staking", () => {
     await xxxToken.connect(xxxAdmin).grantRole(await xxxToken.MANIPULATOR_ROLE(), staking.address);
     await xxxToken.connect(xxxAdmin).mint(owner.address, 100000);
     await xxxToken.connect(xxxAdmin).mint(user.address, 100000);
+    await xxxToken.connect(xxxAdmin).mint(user3.address, 100000);
   });
 
   it("stakeOf: should be able to get correct information about the user's stake.", async () => {
@@ -69,10 +81,21 @@ describe("Staking", () => {
     );
   });
 
+  it("stake: should revert because user is not in the whitelist.", async () => {
+    await addLiquidity(staking, user3, 5000, 5000);
+
+    const proof = getProof(merkleTree, user3.address);
+
+    await expect(staking.connect(user3).stake(5000, proof))
+      .to.be.revertedWith("ERROR: caller is not in the whitelist.");
+  });
+
   it("stake: should successfully stake liquidity tokens.", async () => {
     await addLiquidity(staking, owner, 5000, 5000);
 
-    expect(await staking.connect(owner).stake(5000))
+    const proof = getProof(merkleTree, owner.address);
+
+    expect(await staking.connect(owner).stake(5000, proof))
       .to.emit(staking, "Staked")
       .withArgs(owner.address, 5000);
   });
@@ -152,11 +175,12 @@ describe("Staking", () => {
     const iface = new ethers.utils.Interface(jsonAbi);
     const callData = iface.encodeFunctionData("changeLockInterval", [60 * 60 * 24]);
     const description = "Change the lock interval.";
+    const proof = getProof(merkleTree, user.address);
 
     await daoVoting.connect(owner).addProposal(callData, staking.address, description);
 
     await addLiquidity(staking, user, 2000, 2000);
-    await staking.connect(user).stake(2000);
+    await staking.connect(user).stake(2000, proof);
 
     await daoVoting.connect(owner).vote(1, true);
     await daoVoting.connect(user).vote(1, false);
@@ -165,6 +189,37 @@ describe("Staking", () => {
 
     await daoVoting.finishProposal(1);
     expect(await staking.lockInterval()).to.equal(60 * 60 * 24);
+  });
+
+  it("changeMerkleRoot: should be able to change the merkle root via DAO voting", async () => {
+    const newRoot = "0x55e8063f883b9381398d8fef6fbae371817e8e4808a33a4145b8e3cdd65e3926";
+    const jsonAbi = [{
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_merkleRoot",
+          "type": "bytes32"
+        }
+      ],
+      "name": "changeMerkleRoot",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }];
+    const iface = new ethers.utils.Interface(jsonAbi);
+    const callData = iface.encodeFunctionData("changeMerkleRoot", [newRoot]);
+    const description = "Change the merkle root to include new address.";
+    const proof = getProof(merkleTree, user.address);
+
+    await daoVoting.connect(owner).addProposal(callData, staking.address, description);
+
+    await daoVoting.connect(owner).vote(2, true);
+    await daoVoting.connect(user).vote(2, false);
+
+    await ethers.provider.send("evm_increaseTime", [3 * 24 * 60 * 60]);
+
+    await daoVoting.finishProposal(2);
+    expect(await staking.merkleRoot()).to.equal(newRoot);
   });
 
   it("unstake: should be able to unstake the staked tokens.", async () => {

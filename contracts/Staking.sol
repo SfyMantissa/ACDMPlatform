@@ -6,6 +6,7 @@ import "./XXXToken.sol";
 import "./interfaces/IUniswapV2Pair.sol";
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 /// @title A simple ERC-20 staking contract for the Uniswap testnet.
 /// @author Sfy Mantissa
@@ -30,6 +31,9 @@ contract Staking is AccessControl {
   ///      claimedReward is the flag to tell whether the
   ///      user already claimed the reward.
   mapping(address => Stake) public stakeOf;
+
+  /// @notice Used to implement a compact address whitelist.
+  bytes32 public merkleRoot;
 
   /// @notice Get the stake token address.
   address public stakeTokenAddress;
@@ -59,12 +63,14 @@ contract Staking is AccessControl {
 
   /// @notice All constructor params are actually set in config.ts.
   constructor(
+    bytes32 _merkleRoot,
     address _stakeTokenAddress,
     address _rewardTokenAddress,
     uint256 _rewardPercentage,
     uint256 _rewardInterval,
     uint256 _lockInterval
   ) {
+    merkleRoot = _merkleRoot;
     stakeTokenAddress = _stakeTokenAddress;
     rewardTokenAddress = _rewardTokenAddress;
     rewardPercentage = _rewardPercentage;
@@ -75,7 +81,14 @@ contract Staking is AccessControl {
 
   /// @notice Allows the user to stake a specified `amount` of tokens.
   /// @param _amount The amount of tokens to be staked.
-  function stake(uint256 _amount) external {
+  /// @param _merkleProof Proof that msg.sender is in the merkle tree.
+  function stake(uint256 _amount, bytes32[] calldata _merkleProof) external {
+    bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+    require(
+      MerkleProof.verify(_merkleProof, merkleRoot, leaf),
+      "ERROR: caller is not in the whitelist."
+    );
+
     Stake storage _stake = stakeOf[msg.sender];
 
     IUniswapV2Pair(stakeTokenAddress).transferFrom(
@@ -139,5 +152,11 @@ contract Staking is AccessControl {
   /// @param _value The new lockInterval value.
   function changeLockInterval(uint256 _value) external onlyRole(DAO) {
     lockInterval = _value;
+  }
+
+  /// @notice Change the merkle tree root.
+  /// @param _merkleRoot New merkle root.
+  function changeMerkleRoot(bytes32 _merkleRoot) external onlyRole(DAO) {
+    merkleRoot = _merkleRoot;
   }
 }

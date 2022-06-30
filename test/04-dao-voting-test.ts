@@ -1,10 +1,11 @@
 import { Contract } from "ethers";
+import { MerkleTree } from "merkletreejs";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { testDeploy } from "../utils/deploy-utils";
-import { addLiquidity } from "../utils/staking-utils";
+import { addLiquidity, buildTree, getProof, getRoot } from "../utils/staking-utils";
 
 import config from "../config";
 import hre from "hardhat";
@@ -19,13 +20,23 @@ describe("DAOVoting", () => {
   let user2: SignerWithAddress;
   let description1: String;
   let description2: String;
+  let merkleTree: MerkleTree;
 
   before(async () => {
     [owner, user1, user2] = await ethers.getSigners();
     xxxAdminAddress = "0x9271EfD9709270334721f58f722DDc5C8Ee0E3DF";
 
+    let addresses = [
+      owner.address,
+      user1.address,
+      user2.address
+    ];
+
+    merkleTree = buildTree(addresses);
+
     staking = await testDeploy(
       "Staking",
+      getRoot(merkleTree),
       config.LIQUIDITY_TOKEN_ADDRESS,
       config.XXXTOKEN_ADDRESS,
       config.REWARD_PERCENTAGE,
@@ -150,7 +161,9 @@ describe("DAOVoting", () => {
 
     it("vote: should be able to case a vote as owner.", async () => {
       await addLiquidity(staking, owner, 5000, 1000);
-      await staking.connect(owner).stake(1000);
+      const proof = getProof(merkleTree, owner.address);
+
+      await staking.connect(owner).stake(1000, proof);
 
       expect(await daoVoting.connect(owner).vote(1, true))
         .to.emit(daoVoting, "VoteCasted")
@@ -179,7 +192,9 @@ describe("DAOVoting", () => {
 
     it("vote: should be able to cast a vote as user.", async () => {
       await addLiquidity(staking, user1, 1000, 500);
-      await staking.connect(user1).stake(500);
+      const proof = getProof(merkleTree, user1.address);
+
+      await staking.connect(user1).stake(500, proof);
 
       expect(await daoVoting.connect(user1).vote(1, false))
         .to.emit(daoVoting, "VoteCasted")
@@ -191,7 +206,9 @@ describe("DAOVoting", () => {
         await ethers.provider.send("evm_increaseTime", [3 * 24 * 60 * 60]);
 
         await addLiquidity(staking, user2, 1000, 700);
-        await staking.connect(user2).stake(700);
+        const proof = getProof(merkleTree, user2.address);
+
+        await staking.connect(user2).stake(700, proof);
 
         expect(daoVoting.connect(user2).vote(1, true)).to.be.revertedWith(
           "ERROR: This proposal voting no longer accepts new votes."

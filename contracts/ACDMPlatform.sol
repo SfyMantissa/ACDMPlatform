@@ -8,7 +8,6 @@ import "./interfaces/IUniswapV2Router02.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "hardhat/console.sol";
 
 /// @title A DAO proposal voting implementation with ERC-20 tokens.
 /// @author Sfy Mantissa

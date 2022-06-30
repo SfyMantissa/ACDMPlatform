@@ -2,9 +2,10 @@ import { expect } from "chai";
 import { testDeploy } from "../utils/deploy-utils";
 import config from "../config";
 import { Contract } from "ethers";
+import { MerkleTree } from "merkletreejs";
 import { ethers, waffle } from "hardhat";
 import hre from "hardhat";
-import { addLiquidity } from "../utils/staking-utils";
+import { addLiquidity, buildTree, getProof, getRoot } from "../utils/staking-utils";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
 describe("ACDMPlatform", () => {
@@ -19,6 +20,7 @@ describe("ACDMPlatform", () => {
   let acdmToken: Contract;
   let daoVoting: Contract;
   let acdmPlatform: Contract;
+  let merkleTree: MerkleTree;
   let zeroAddress: string = "0x0000000000000000000000000000000000000000";
   const provider = waffle.provider;
 
@@ -29,8 +31,19 @@ describe("ACDMPlatform", () => {
     xxxToken = await ethers.getContractAt("XXXToken", config.XXXTOKEN_ADDRESS);
     acdmToken = await ethers.getContractAt("ACDMToken", config.ACDMTOKEN_ADDRESS);
 
+    let addresses = [
+      owner.address,
+      user1.address,
+      user2.address,
+      user3.address,
+      user4.address
+    ];
+
+    merkleTree = buildTree(addresses);
+
     staking = await testDeploy(
       "Staking",
+      getRoot(merkleTree),
       config.LIQUIDITY_TOKEN_ADDRESS,
       config.XXXTOKEN_ADDRESS,
       config.REWARD_PERCENTAGE,
@@ -287,11 +300,13 @@ describe("ACDMPlatform", () => {
       await daoVoting.connect(owner).addProposal(callData, acdmPlatform.address, description);
 
       await addLiquidity(staking, owner, 5000, 1000);
-      await staking.connect(owner).stake(1000);
+      const proof1 = getProof(merkleTree, owner.address);
+      await staking.connect(owner).stake(1000, proof1);
       await daoVoting.connect(owner).vote(1, true);
 
       await addLiquidity(staking, user1, 5000, 500);
-      await staking.connect(user1).stake(500);
+      const proof2 = getProof(merkleTree, user1.address);
+      await staking.connect(user1).stake(500, proof2);
       await daoVoting.connect(user1).vote(1, false);
 
       await ethers.provider.send("evm_increaseTime", [3 * 24 * 60 * 60]);
@@ -324,11 +339,13 @@ describe("ACDMPlatform", () => {
       await daoVoting.connect(owner).addProposal(callData, acdmPlatform.address, description);
 
       await addLiquidity(staking, owner, 5000, 1000);
-      await staking.connect(owner).stake(1000);
+      const proof1 = getProof(merkleTree, owner.address);
+      await staking.connect(owner).stake(1000, proof1);
       await daoVoting.connect(owner).vote(2, true);
 
       await addLiquidity(staking, user1, 5000, 500);
-      await staking.connect(user1).stake(500);
+      const proof2 = getProof(merkleTree, user1.address);
+      await staking.connect(user1).stake(500, proof2);
       await daoVoting.connect(user1).vote(2, false);
 
       await ethers.provider.send("evm_increaseTime", [3 * 24 * 60 * 60]);
@@ -361,11 +378,13 @@ describe("ACDMPlatform", () => {
       await daoVoting.connect(owner).addProposal(callData, acdmPlatform.address, description);
 
       await addLiquidity(staking, owner, 5000, 1000);
-      await staking.connect(owner).stake(1000);
+      const proof1 = getProof(merkleTree, owner.address);
+      await staking.connect(owner).stake(1000, proof1);
       await daoVoting.connect(owner).vote(3, true);
 
       await addLiquidity(staking, user1, 5000, 500);
-      await staking.connect(user1).stake(500);
+      const proof2 = getProof(merkleTree, user1.address);
+      await staking.connect(user1).stake(500, proof2);
       await daoVoting.connect(user1).vote(3, false);
 
       await ethers.provider.send("evm_increaseTime", [3 * 24 * 60 * 60]);
@@ -392,11 +411,13 @@ describe("ACDMPlatform", () => {
       await daoVoting.connect(owner).addProposal(callData, acdmPlatform.address, description);
 
       await addLiquidity(staking, owner, 5000, 1000);
-      await staking.connect(owner).stake(1000);
+      const proof1 = getProof(merkleTree, owner.address);
+      await staking.connect(owner).stake(1000, proof1);
       await daoVoting.connect(owner).vote(4, true);
 
       await addLiquidity(staking, user1, 5000, 500);
-      await staking.connect(user1).stake(500);
+      const proof2 = getProof(merkleTree, user1.address);
+      await staking.connect(user1).stake(500, proof2);
       await daoVoting.connect(user1).vote(4, false);
 
       await ethers.provider.send("evm_increaseTime", [3 * 24 * 60 * 60]);
@@ -421,11 +442,13 @@ describe("ACDMPlatform", () => {
       await daoVoting.connect(owner).addProposal(callData, acdmPlatform.address, description);
 
       await addLiquidity(staking, owner, 5000, 1000);
-      await staking.connect(owner).stake(1000);
+      const proof1 = getProof(merkleTree, owner.address);
+      await staking.connect(owner).stake(1000, proof1);
       await daoVoting.connect(owner).vote(5, true);
 
       await addLiquidity(staking, user1, 5000, 500);
-      await staking.connect(user1).stake(500);
+      const proof2 = getProof(merkleTree, user1.address);
+      await staking.connect(user1).stake(500, proof2);
       await daoVoting.connect(user1).vote(5, false);
 
       await ethers.provider.send("evm_increaseTime", [3 * 24 * 60 * 60]);

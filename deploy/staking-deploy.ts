@@ -4,6 +4,7 @@ import config from "../config";
 
 deploy(
   "Staking",
+  config.MERKLE_ROOT,
   config.LIQUIDITY_TOKEN_ADDRESS,
   config.XXXTOKEN_ADDRESS,
   config.REWARD_PERCENTAGE,
