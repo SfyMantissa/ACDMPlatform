@@ -60,6 +60,22 @@ Allows to change the lockInterval via DAO voting.
 |---|---|---|
 | _value | uint256 | The new lockInterval value. |
 
+### changeMerkleRoot
+
+```solidity
+function changeMerkleRoot(bytes32 _merkleRoot) external nonpayable
+```
+
+Change the merkle tree root.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _merkleRoot | bytes32 | New merkle root. |
+
 ### claim
 
 ```solidity
@@ -150,6 +166,23 @@ Get the interval for which `claim()`         function remains unavailable.
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### merkleRoot
+
+```solidity
+function merkleRoot() external view returns (bytes32)
+```
+
+Used to implement a compact address whitelist.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
 ### renounceRole
 
 ```solidity
@@ -238,7 +271,7 @@ Get the reward token address.
 ### stake
 
 ```solidity
-function stake(uint256 _amount) external nonpayable
+function stake(uint256 _amount, bytes32[] _merkleProof) external nonpayable
 ```
 
 Allows the user to stake a specified `amount` of tokens.
@@ -250,6 +283,7 @@ Allows the user to stake a specified `amount` of tokens.
 | Name | Type | Description |
 |---|---|---|
 | _amount | uint256 | The amount of tokens to be staked. |
+| _merkleProof | bytes32[] | Proof that msg.sender is in the merkle tree. |
 
 ### stakeOf
 
