@@ -4,22 +4,20 @@ import { deploy, _readDeploymentData, _writeDeploymentData } from './utils/deplo
 let acdmToken, xxxToken, staking, dao;
 let data = _readDeploymentData();
 
-const deployChain = async () => {
+const deployChain = async (data: any[]) => {
   acdmToken = await deploy("ACDMToken");
   xxxToken = await deploy("XXXToken");
 
-  data["Staking"].constructor[2] = xxxToken.address;
+  data["Staking"].args[2] = xxxToken.address;
   staking = await deploy("Staking");
 
-  data["DAOVoting"].constructor[1] = staking.address;
+  data["DAOVoting"].args[1] = staking.address;
   dao = await deploy("DAOVoting");
 
-  data["ACDMPlatform"].constructor[2] = acdmToken.address;
-  data["ACDMPlatform"].constructor[3] = xxxToken.address;
-  data["ACDMPlatform"].constructor[4] = dao.address;
+  data["ACDMPlatform"].args[2] = acdmToken.address;
+  data["ACDMPlatform"].args[3] = xxxToken.address;
+  data["ACDMPlatform"].args[4] = dao.address;
   await deploy("ACDMPlatform");
 }
 
-_writeDeploymentData(data);
-deployChain();
-
+deployChain(data).then(() => _writeDeploymentData(data));
