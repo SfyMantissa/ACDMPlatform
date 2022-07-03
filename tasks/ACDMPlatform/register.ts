@@ -1,6 +1,6 @@
 import "@nomiclabs/hardhat-ethers";
 import { task } from "hardhat/config";
-import config from '../../config';
+import { ACDMPlatform } from "../../deployments.json";
 
 task("register",
   "Allow the caller to register, providing referer information.")
@@ -8,7 +8,7 @@ task("register",
   .addParam("referer", "Referer address.")
   .setAction(async (args, { ethers }) => {
     const signerArray = await ethers.getSigners();
-    const acdmPlatform = await ethers.getContractAt("ACDMPlatform", config.ACDMPLATFORM_ADDRESS);
+    const acdmPlatform = await ethers.getContractAt("ACDMPlatform", ACDMPlatform.address);
 
     const txRegister = acdmPlatform.connect(signerArray[args.signer]).register(args.referer);
     const rRegister = await (await txRegister).wait();

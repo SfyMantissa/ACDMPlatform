@@ -1,6 +1,6 @@
 import "@nomiclabs/hardhat-ethers";
 import { task } from "hardhat/config";
-import config from '../../config';
+import { XXXToken } from "../../deployments.json";
 
 task("xxxBurn",
   "Allows the caller to burn the specified `amount` of tokens from the `account` and decrease the `_totalSupply by the `amount`.")
@@ -9,7 +9,7 @@ task("xxxBurn",
   .addParam("amount", "Number of tokens to be burned.")
   .setAction(async (args, { ethers }) => {
     const signerArray = await ethers.getSigners();
-    const xxxToken = await ethers.getContractAt("XXXToken", config.XXXTOKEN_ADDRESS);
+    const xxxToken = await ethers.getContractAt("XXXToken", XXXToken.address);
     const txBurn = xxxToken.connect(signerArray[args.signer]).burn(args.account, args.amount);
     const rBurn = await (await txBurn).wait();
 

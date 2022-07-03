@@ -1,6 +1,6 @@
 import "@nomiclabs/hardhat-ethers";
 import { task } from "hardhat/config";
-import config from '../../config';
+import { DAOVoting } from "../../deployments.json";
 
 task("vote",
   "Vote for a proposal.")
@@ -9,7 +9,7 @@ task("vote",
   .addParam("decision", "Whether you vote `for` (true) or `against` (false).")
   .setAction(async (args, { ethers }) => {
     const signerArray = await ethers.getSigners();
-    const daoVoting = await ethers.getContractAt("DAOVoting", config.DAOVOTING_ADDRESS);
+    const daoVoting = await ethers.getContractAt("DAOVoting", DAOVoting.address);
 
     let isFor = (args.decision === 'true');
     const txVote = daoVoting.connect(

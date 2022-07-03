@@ -1,6 +1,6 @@
 import "@nomiclabs/hardhat-ethers";
 import { task } from "hardhat/config";
-import config from "../../config";
+import { ACDMPlatform } from "../../deployments.json";
 
 task("redeemOrder", "Allow the caller to remove an order with ACDM tokens.")
   .addParam("signer", "ID of the signer used to make the call.")
@@ -11,7 +11,7 @@ task("redeemOrder", "Allow the caller to remove an order with ACDM tokens.")
     const signerArray = await ethers.getSigners();
     const acdmPlatform = await ethers.getContractAt(
       "ACDMPlatform",
-      config.ACDMPLATFORM_ADDRESS
+      ACDMPlatform.address
     );
 
     const user = signerArray[args.signer].address;

@@ -1,13 +1,13 @@
 import { Contract } from "ethers";
 import { MerkleTree } from "merkletreejs";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { XXXToken, Staking, DAOVoting } from "../deployments.json";
 
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { testDeploy } from "../utils/deploy-utils";
 import { addLiquidity, buildTree, getProof, getRoot } from "../utils/staking-utils";
 
-import config from "../config";
 import hre from "hardhat";
 
 describe("Staking", () => {
@@ -35,22 +35,22 @@ describe("Staking", () => {
     staking = await testDeploy(
       "Staking",
       getRoot(merkleTree),
-      config.LIQUIDITY_TOKEN_ADDRESS,
-      config.XXXTOKEN_ADDRESS,
-      config.REWARD_PERCENTAGE,
-      config.REWARD_INTERVAL,
-      config.LOCK_INTERVAL
+      Staking.args[1],
+      Staking.args[2],
+      Staking.args[3],
+      Staking.args[4],
+      Staking.args[5]
     );
 
     daoVoting = await testDeploy(
       "DAOVoting",
-      config.LIQUIDITY_TOKEN_ADDRESS,
+      DAOVoting.args[0],
       staking.address,
-      config.MINIMUM_QUORUM,
-      config.DEBATING_PERIOD
+      DAOVoting.args[2],
+      DAOVoting.args[3]
     );
 
-    xxxToken = await ethers.getContractAt("XXXToken", config.XXXTOKEN_ADDRESS);
+    xxxToken = await ethers.getContractAt("XXXToken", XXXToken.address);
 
     await staking.grantRole(await staking.DAO(), daoVoting.address);
 
@@ -119,10 +119,10 @@ describe("Staking", () => {
     const lastClaimTimestamp = latestBlock.timestamp;
 
     const rewardPerInterval = Math.round(
-      (balance * config.REWARD_PERCENTAGE) / 100
+      (balance * Number(Staking.args[3])) / 100
     );
     const numOfIntervals = Math.round(
-      (lastClaimTimestamp - stakeStartTimestamp) / config.REWARD_INTERVAL
+      (lastClaimTimestamp - stakeStartTimestamp) / Number(Staking.args[4])
     );
     const reward = rewardPerInterval * numOfIntervals;
 
@@ -145,10 +145,10 @@ describe("Staking", () => {
     const lastTimestamp = latestBlock.timestamp;
 
     const rewardPerInterval = Math.round(
-      (balance * config.REWARD_PERCENTAGE) / 100
+      (balance * Number(Staking.args[3])) / 100
     );
     const numOfIntervals = Math.round(
-      (lastTimestamp - lastClaimTimestamp) / config.REWARD_INTERVAL
+      (lastTimestamp - lastClaimTimestamp) / Number(Staking.args[4])
     );
     const reward = rewardPerInterval * numOfIntervals;
 

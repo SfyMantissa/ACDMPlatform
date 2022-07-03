@@ -1,6 +1,6 @@
 import "@nomiclabs/hardhat-ethers";
 import { task } from "hardhat/config";
-import config from '../../config';
+import { XXXToken } from "../../deployments.json";
 
 task("xxxMint",
   "Allows the caller to give the specified `amount` of tokens to the `account` and increase `_totalSupply` by the `amount`.")
@@ -9,7 +9,7 @@ task("xxxMint",
   .addParam("amount", "Number of tokens to be transferred.")
   .setAction(async (args, { ethers }) => {
     const signerArray = await ethers.getSigners();
-    const xxxToken = await ethers.getContractAt("XXXToken", config.XXXTOKEN_ADDRESS);
+    const xxxToken = await ethers.getContractAt("XXXToken", XXXToken.address);
     const txMint = xxxToken.connect(signerArray[args.signer]).mint(args.account, args.amount);
     const rMint = await (await txMint).wait();
 

@@ -1,12 +1,12 @@
 import { expect } from "chai";
 import { testDeploy } from "../utils/deploy-utils";
-import config from "../config";
 import { Contract } from "ethers";
 import { MerkleTree } from "merkletreejs";
 import { ethers, waffle } from "hardhat";
 import hre from "hardhat";
 import { addLiquidity, buildTree, getProof, getRoot } from "../utils/staking-utils";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import { ACDMToken, XXXToken, Staking, DAOVoting, ACDMPlatform } from "../deployments.json";
 
 describe("ACDMPlatform", () => {
   let owner: SignerWithAddress;
@@ -28,8 +28,8 @@ describe("ACDMPlatform", () => {
     [owner, user1, user2, user3, user4] = await ethers.getSigners();
     adminAddress = "0x9271EfD9709270334721f58f722DDc5C8Ee0E3DF";
 
-    xxxToken = await ethers.getContractAt("XXXToken", config.XXXTOKEN_ADDRESS);
-    acdmToken = await ethers.getContractAt("ACDMToken", config.ACDMTOKEN_ADDRESS);
+    xxxToken = await ethers.getContractAt("XXXToken", XXXToken.address);
+    acdmToken = await ethers.getContractAt("ACDMToken", ACDMToken.address);
 
     let addresses = [
       owner.address,
@@ -44,27 +44,27 @@ describe("ACDMPlatform", () => {
     staking = await testDeploy(
       "Staking",
       getRoot(merkleTree),
-      config.LIQUIDITY_TOKEN_ADDRESS,
-      config.XXXTOKEN_ADDRESS,
-      config.REWARD_PERCENTAGE,
-      config.REWARD_INTERVAL,
-      config.LOCK_INTERVAL
+      Staking.args[1],
+      Staking.args[2],
+      Staking.args[3],
+      Staking.args[4],
+      Staking.args[5]
     );
 
     daoVoting = await testDeploy(
       "DAOVoting",
-      config.LIQUIDITY_TOKEN_ADDRESS,
+      DAOVoting.args[0],
       staking.address,
-      config.MINIMUM_QUORUM,
-      config.DEBATING_PERIOD
+      DAOVoting.args[2],
+      DAOVoting.args[3]
     );
 
     acdmPlatform = await testDeploy(
       "ACDMPlatform",
-      config.ROUTER02_ADDRESS,
-      config.WETH_ADDRESS,
-      config.ACDMTOKEN_ADDRESS,
-      config.XXXTOKEN_ADDRESS,
+      ACDMPlatform.args[0],
+      ACDMPlatform.args[1],
+      ACDMPlatform.args[2],
+      ACDMPlatform.args[3],
       daoVoting.address
     );
 

@@ -1,6 +1,6 @@
 import "@nomiclabs/hardhat-ethers";
 import { task } from "hardhat/config";
-import config from '../../config';
+import { ACDMToken } from "../../deployments.json";
 
 task("acdmMint",
   "Allows the caller to give the specified `amount` of tokens to the `account` and increase `_totalSupply` by the `amount`.")
@@ -9,7 +9,7 @@ task("acdmMint",
   .addParam("amount", "Number of tokens to be transferred.")
   .setAction(async (args, { ethers }) => {
     const signerArray = await ethers.getSigners();
-    const acdmToken = await ethers.getContractAt("ACDMToken", config.ACDMTOKEN_ADDRESS);
+    const acdmToken = await ethers.getContractAt("ACDMToken", ACDMToken.address);
     const txMint = acdmToken.connect(signerArray[args.signer]).mint(args.account, args.amount);
     const rMint = await (await txMint).wait();
 

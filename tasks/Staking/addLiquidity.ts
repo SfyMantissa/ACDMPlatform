@@ -5,7 +5,7 @@ import ERC20Token from '../../abi/erc20_abi.json';
 
 import "@nomiclabs/hardhat-ethers";
 import { task } from "hardhat/config";
-import config from '../../config';
+import { XXXToken, Staking } from "../../deployments.json";
 
 task("addLiquidity",
   "Symmetrically add a specified amount of token0 and token1 to the "
@@ -18,7 +18,7 @@ task("addLiquidity",
     let afterMinute = new Date().getTime() + 60;
 
     const xxxToken = new ethers.Contract(
-      config.XXXTOKEN_ADDRESS,
+      XXXToken.address,
       ERC20Token.abi,
       signerArray[args.signer]
     );
@@ -26,22 +26,22 @@ task("addLiquidity",
     const symbol = await xxxToken.symbol();
 
     await xxxToken.connect(signerArray[args.signer]).mint(signerArray[args.signer].address, args.amount);
-    await xxxToken.connect(signerArray[args.signer]).approve(config.ROUTER02_ADDRESS, args.amount);
+    await xxxToken.connect(signerArray[args.signer]).approve(Staking.router02, args.amount);
 
     const router02 = new ethers.Contract(
-      config.ROUTER02_ADDRESS,
+      Staking.router02,
       IUniswapV2Router02.abi,
       signerArray[args.signer]
     );
 
     const factory = new ethers.Contract(
-      config.FACTORY_ADDRESS,
+      Staking.factory,
       IUniswapV2Factory.abi,
       signerArray[args.signer]
     );
 
     await router02.connect(signerArray[args.signer]).addLiquidityETH(
-      config.XXXTOKEN_ADDRESS,
+      XXXToken.address,
       args.amount,
       args.amount,
       args.amount,
@@ -51,7 +51,7 @@ task("addLiquidity",
     );
 
     const pairAddress = await factory.getPair(
-      config.XXXTOKEN_ADDRESS,
+      XXXToken.address,
       await router02.WETH()
     );
 

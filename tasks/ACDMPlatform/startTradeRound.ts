@@ -1,13 +1,13 @@
 import "@nomiclabs/hardhat-ethers";
 import { task } from "hardhat/config";
-import config from '../../config';
+import { ACDMPlatform } from "../../deployments.json";
 
 task("startTradeRound",
   "Allow the caller to start the trade round.")
   .addParam("signer", "ID of the signer used to make the call.")
   .setAction(async (args, { ethers }) => {
     const signerArray = await ethers.getSigners();
-    const acdmPlatform = await ethers.getContractAt("ACDMPlatform", config.ACDMPLATFORM_ADDRESS);
+    const acdmPlatform = await ethers.getContractAt("ACDMPlatform", ACDMPlatform.address);
 
     const txStartTradeRound = acdmPlatform.connect(signerArray[args.signer]).startTradeRound();
     const rStartTradeRound = await (await txStartTradeRound).wait();

@@ -1,13 +1,13 @@
 import { Contract } from "ethers";
 import { MerkleTree } from "merkletreejs";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { XXXToken, Staking, DAOVoting } from "../deployments.json";
 
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { testDeploy } from "../utils/deploy-utils";
 import { addLiquidity, buildTree, getProof, getRoot } from "../utils/staking-utils";
 
-import config from "../config";
 import hre from "hardhat";
 
 describe("DAOVoting", () => {
@@ -37,22 +37,22 @@ describe("DAOVoting", () => {
     staking = await testDeploy(
       "Staking",
       getRoot(merkleTree),
-      config.LIQUIDITY_TOKEN_ADDRESS,
-      config.XXXTOKEN_ADDRESS,
-      config.REWARD_PERCENTAGE,
-      config.REWARD_INTERVAL,
-      config.LOCK_INTERVAL
+      Staking.args[1],
+      Staking.args[2],
+      Staking.args[3],
+      Staking.args[4],
+      Staking.args[5]
     );
 
     daoVoting = await testDeploy(
       "DAOVoting",
-      config.LIQUIDITY_TOKEN_ADDRESS,
+      DAOVoting.args[0],
       staking.address,
-      config.MINIMUM_QUORUM,
-      config.DEBATING_PERIOD
+      DAOVoting.args[2],
+      DAOVoting.args[3]
     );
 
-    xxxToken = await ethers.getContractAt("XXXToken", config.XXXTOKEN_ADDRESS);
+    xxxToken = await ethers.getContractAt("XXXToken", XXXToken.address);
 
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",

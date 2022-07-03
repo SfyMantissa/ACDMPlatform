@@ -1,36 +1,56 @@
 import * as fs from 'fs';
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
-export const deploy = async (name: string, ...args: any[]) => {
-  const Contract = await ethers.getContractFactory(name);
-  const contract = await Contract.deploy(...args);
-  await contract.deployed();
-  console.log(name + " deployed to:", contract.address);
-  _updateDeploymentAddress(contract.address, name.toUpperCase());
-};
+const CONFIG = './deployments.json';
 
 export const testDeploy = async (name: string, ...args: any[]) => {
-  const Contract = await ethers.getContractFactory(name);
+  const Contract = await hre.ethers.getContractFactory(name);
   const contract = await Contract.deploy(...args);
   await contract.deployed();
 
   return contract;
 };
 
-const _updateDeploymentAddress = async (address: string, name: string) => {
-  let config: string = './config.ts';
-  fs.readFile(config, 'utf-8', (err: unknown, data: string) => {
-    if (err) throw err;
-    let regexString = name + '_ADDRESS: ".*",';
-    let regex = new RegExp(regexString, "g");
-    let update = data.replace(
-      regex,
-      name + '_ADDRESS: "' + address + '",'
-    );
+export const verifyDeploy = async (name: string) => {
+  const data = _readDeploymentData();
+  const args = data[name].args;
 
-    fs.writeFile(config, update, 'utf-8', (err: unknown) => {
-      if (err) throw err;
-      console.log('Updated ' + name + '_ADDRESS in config.ts.');
-    });
+  const contract = await testDeploy(name, ...args ?? "");
+
+  console.log(name + " deployed to:", contract.address);
+  data[name].address = contract.address;
+  _writeDeploymentData(data);
+  _verifyDeployment(data[name]);
+
+  return contract;
+};
+
+export const deploy = async (name: string) => {
+  const data = _readDeploymentData();
+  const args = data[name].args;
+
+  const contract = await testDeploy(name, ...args ?? "");
+
+  console.log(name + " deployed to:", contract.address);
+  data[name].address = contract.address;
+  _writeDeploymentData(data);
+
+  return contract;
+};
+
+export const _readDeploymentData = () => {
+  const rawData: any = fs.readFileSync(CONFIG);
+  return JSON.parse(rawData);
+};
+
+export const _writeDeploymentData = (data: string) => {
+  const rawData = JSON.stringify(data, null, 2);
+  fs.writeFileSync(CONFIG, rawData);
+};
+
+const _verifyDeployment = async (config: any) => {
+  await hre.run("verify:verify", {
+    address: config.address,
+    constructorArguments: config.constructor
   });
 };

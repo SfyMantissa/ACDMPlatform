@@ -9,6 +9,7 @@ import '@primitivefi/hardhat-dodoc';
 import "hardhat-etherscan-abi";
 import "hardhat-deploy";
 import "solidity-coverage";
+import "hardhat-contract-sizer";
 
 dotenv.config();
 
